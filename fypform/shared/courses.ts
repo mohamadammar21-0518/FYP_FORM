@@ -5,8 +5,3 @@ export const courseNames = [
   "Course 4",
   "Course 5",
 ] as const;
-
-export type CourseAttendanceEntry = {
-  courseName: string;
-  attendancePercentage: number;
-};

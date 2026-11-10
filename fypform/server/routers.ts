@@ -27,10 +27,11 @@ export const appRouter = router({
             fullName: input.fullName,
             studentId: input.studentId,
             intakeYear: input.intakeYear,
-            courseAttendance: courseNames.map((courseName, index) => ({
-              courseName,
-              attendancePercentage: input.attendance[index],
-            })),
+            course1: String(input.attendance[0]),
+            course2: String(input.attendance[1]),
+            course3: String(input.attendance[2]),
+            course4: String(input.attendance[3]),
+            course5: String(input.attendance[4]),
             gpa: input.gpa != null ? String(input.gpa) : null,
             cgpa: input.cgpa != null ? String(input.cgpa) : null,
           });
