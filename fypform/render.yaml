@@ -3,6 +3,7 @@ services:
     name: fyp-attendance-form
     env: node
     plan: free
+    rootDir: fypform
     buildCommand: pnpm install && pnpm build
     startCommand: pnpm start
     envVars:
