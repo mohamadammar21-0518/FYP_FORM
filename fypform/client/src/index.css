@@ -609,3 +609,155 @@ body::before {
 .admin-courses-table th { padding: 6px 12px; text-align: left; color: #3d5468; font-size: 10px; font-weight: 600; letter-spacing: .05em; border-bottom: 1px solid #d0dde8; }
 .admin-courses-table td { padding: 7px 12px; color: #2a3f52; border-bottom: 1px solid #e8eff5; }
 .admin-courses-table tr:last-child td { border-bottom: 0; }
+
+/* ════════════════════════════════
+   Admin — toolbar, cards, course table
+════════════════════════════════ */
+
+/* Search/filter toolbar */
+.admin-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  max-width: 1200px; margin: 0 auto 20px;
+  flex-wrap: wrap;
+}
+.admin-search-wrap {
+  position: relative; flex: 1; min-width: 200px;
+}
+.admin-search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: #8fa6b8; pointer-events: none;
+}
+.admin-search {
+  width: 100%; height: 40px; padding: 0 12px 0 36px;
+  border: 1.5px solid #d5e0e8; border-radius: 7px;
+  font-size: 13px; color: #20394f; background: #fff;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.admin-search:focus { outline: none; border-color: var(--aiu-teal); box-shadow: 0 0 0 3px rgb(0 178 172 / 10%); }
+.admin-filter-select {
+  height: 40px; padding: 0 12px; border: 1.5px solid #d5e0e8;
+  border-radius: 7px; font-size: 13px; color: #20394f; background: #fff;
+  cursor: pointer; transition: border-color 150ms ease;
+}
+.admin-filter-select:focus { outline: none; border-color: var(--aiu-teal); }
+.admin-clear-filter {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 40px; padding: 0 12px;
+  color: #607487; background: #fff;
+  border: 1.5px solid #d5e0e8; border-radius: 7px;
+  font-size: 12px; cursor: pointer;
+  transition: background 140ms ease;
+}
+.admin-clear-filter:hover { background: #f0f4f7; }
+.admin-result-count { color: #8fa6b8; font-size: 12px; white-space: nowrap; margin-left: auto; }
+
+/* stat icon wrapper */
+.admin-stat-icon { flex-shrink: 0; }
+
+/* ── Student cards ── */
+.admin-cards {
+  display: flex; flex-direction: column; gap: 16px;
+  max-width: 1200px; margin: 0 auto;
+}
+
+.admin-card {
+  background: #fff;
+  border: 1px solid #dce5eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgb(19 44 71 / 4%);
+  transition: box-shadow 200ms ease;
+}
+.admin-card:hover { box-shadow: 0 4px 18px rgb(19 44 71 / 8%); }
+
+/* Card header */
+.admin-card-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #edf2f5;
+  flex-wrap: wrap;
+}
+.admin-card-avatar {
+  width: 42px; height: 42px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--aiu-navy), #1a4a9a);
+  color: #fff; font-size: 17px; font-weight: 650;
+  border-radius: 10px;
+}
+.admin-card-identity { flex: 1; min-width: 0; }
+.admin-card-identity strong { display: block; color: var(--aiu-navy); font-size: 15px; font-weight: 650; }
+.admin-card-identity span { display: block; color: #607487; font-family: var(--mono); font-size: 11px; margin-top: 2px; }
+.admin-card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 550; white-space: nowrap;
+}
+.admin-badge-intake { background: #eef3fb; color: #2a5a8c; border: 1px solid #c8ddef; }
+.admin-badge-semester { background: #edf7f6; color: #1f6b63; border: 1px solid #b8e0dc; }
+.admin-card-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+
+/* GPA / stats row */
+.admin-card-gpa-row {
+  display: flex; align-items: center; flex-wrap: wrap;
+  padding: 12px 20px; gap: 0;
+  background: #fafcfd;
+  border-bottom: 1px solid #edf2f5;
+}
+.admin-card-gpa-item { display: flex; flex-direction: column; gap: 2px; padding: 4px 20px 4px 0; }
+.admin-card-gpa-item:first-child { padding-left: 0; }
+.admin-card-gpa-label { color: #8fa6b8; font-size: 9px; font-family: var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.admin-card-gpa-value { color: var(--aiu-navy); font-size: 14px; font-weight: 650; font-family: var(--mono); }
+.admin-card-gpa-divider { width: 1px; height: 32px; background: #e0eaef; margin-right: 20px; align-self: center; }
+
+/* Course toggle button */
+.admin-card-course-toggle {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 12px 20px;
+  background: transparent; border: none;
+  color: #3a6ea8; font-size: 12px; font-weight: 550;
+  cursor: pointer; text-align: left;
+  border-top: 1px solid #edf2f5;
+  transition: background 140ms ease;
+}
+.admin-card-course-toggle:hover { background: #f5f9ff; }
+
+/* Course detail table inside card */
+.admin-card-courses {
+  padding: 0 20px 16px;
+  border-top: 1px solid #e8f0f8;
+  background: #f8fbff;
+}
+.admin-courses-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+.admin-courses-table th {
+  padding: 8px 12px; text-align: left;
+  color: #4a6378; font-size: 10px; font-weight: 600;
+  letter-spacing: .05em; border-bottom: 1.5px solid #dce8f0;
+  background: #f0f6fb;
+}
+.admin-courses-table td { padding: 9px 12px; color: #2a3f52; border-bottom: 1px solid #e8eff5; vertical-align: middle; }
+.admin-courses-table tbody tr:last-child td { border-bottom: 0; }
+.admin-courses-table tbody tr:hover td { background: #eef4fb; }
+
+/* Attendance status badges */
+.admin-att-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 600;
+}
+.admin-att-good { background: #edf7ed; color: #2a7a4a; border: 1px solid #c8e8cc; }
+.admin-att-warning { background: #fff8e6; color: #8a6200; border: 1px solid #f0d882; }
+.admin-att-low { background: #fdf4f4; color: #a63f48; border: 1px solid #f0cccc; }
+
+@media (max-width: 600px) {
+  .admin-card-header { gap: 10px; padding: 14px 16px; }
+  .admin-card-gpa-row { padding: 10px 16px; }
+  .admin-card-gpa-item { padding-right: 14px; }
+  .admin-card-gpa-divider { margin-right: 14px; }
+  .admin-card-course-toggle { padding: 11px 16px; }
+  .admin-card-courses { padding: 0 16px 14px; }
+  .admin-courses-table th, .admin-courses-table td { padding: 7px 8px; }
+  .admin-toolbar { gap: 8px; }
+  .admin-search-wrap { min-width: 0; }
+  .admin-result-count { display: none; }
+}
