@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { semesterList } from "../shared/courses";
 import { publicProcedure, router } from "./_core/trpc";
-import { createAttendanceSubmission, getAllSubmissions, updateSubmission, deleteSubmission, deleteAllSubmissions } from "./db";
+import { createAttendanceSubmission, getAllSubmissions, deleteSubmission, deleteAllSubmissions } from "./db";
 import { TRPCError } from "@trpc/server";
 
 const gpaField = z.number().finite().min(0).max(4);
