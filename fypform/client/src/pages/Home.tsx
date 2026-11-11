@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -100,18 +100,12 @@ export default function Home() {
     setStep(current => current === 3 ? 2 : 1);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = () => {
     setFormError("");
 
-    // Only allow submission from step 3
-    if (step !== 3) {
-      handleContinue();
-      return;
-    }
+    if (step !== 3) return;
 
-    const form = event.currentTarget;
-    if (!form.reportValidity()) return;
+    if (!formRef.current?.reportValidity()) return;
 
     const optionalNumber = (raw: string) => raw.trim() === "" ? undefined : Number(raw);
     submit.mutate({
@@ -235,13 +229,7 @@ export default function Home() {
               })}
             </div>
 
-            <form ref={formRef} onSubmit={handleSubmit} noValidate onKeyDown={(e) => {
-              // Prevent Enter from submitting the form on steps 1 and 2
-              if (e.key === "Enter" && step !== 3) {
-                e.preventDefault();
-                handleContinue();
-              }
-            }}>
+            <form ref={formRef} noValidate onSubmit={(e) => e.preventDefault()}>
               {step === 1 && (
                 <section className="form-section" aria-label="Step 1 of 3: Your details">
                   <div className="section-heading">
@@ -392,7 +380,7 @@ export default function Home() {
                         onChange={event => update("cgpa", event.target.value)}
                       />
                     </div>
-                    <p className="field-hint results-hint">Enter the value on your institution’s scale, or leave it blank.</p>
+                    <p className="field-hint results-hint">Enter your GPA/CGPA from Student Hub (0.00 to 4.00 scale), or leave blank.</p>
                   </div>
 
                   <div className="review-card" aria-labelledby="review-heading">
@@ -437,7 +425,7 @@ export default function Home() {
                       <ArrowRight size={17} aria-hidden="true" />
                     </button>
                   ) : (
-                    <button className="primary-button" type="submit" disabled={submit.isPending}>
+                    <button className="primary-button" type="button" disabled={submit.isPending} onClick={handleSubmit}>
                       <span>{submit.isPending ? "Saving your response…" : "Submit response"}</span>
                       {!submit.isPending && <ArrowRight size={17} aria-hidden="true" />}
                       {submit.isPending && <span className="button-spinner" aria-hidden="true" />}
