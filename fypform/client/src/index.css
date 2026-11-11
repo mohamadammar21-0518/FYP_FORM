@@ -107,6 +107,9 @@ body::before {
 .field input:focus, .field select:focus { background: #fff; border-color: var(--aiu-teal); box-shadow: 0 0 0 3px rgb(0 178 172 / 12%); outline: none; }
 .field select:invalid { color: #627788; }
 .field select option { color: #20394f; }
+.field-help { margin-top: 2px; color: #7a8c9a; font-size: 10px; font-family: var(--mono); letter-spacing: .02em; }
+.field input:invalid:not(:placeholder-shown) { border-color: #d4a8a6; }
+.field input:invalid:not(:placeholder-shown):focus { border-color: var(--error); box-shadow: 0 0 0 3px rgb(166 63 72 / 10%); }
 
 .course-list { margin-left: 31px; border-top: 1px solid #e4ebef; }
 .course-row { min-height: 68px; display: grid; grid-template-columns: minmax(0, 1fr) 132px; align-items: center; gap: 16px; padding: 10px 0; border-bottom: 1px solid #e4ebef; }
@@ -159,6 +162,7 @@ body::before {
 .success-view .eyebrow { margin-bottom: 10px; color: #54805a; }
 .success-view h2 { font-size: clamp(25px, 3.5vw, 32px); }
 .success-copy { max-width: 430px; margin: 12px 0 22px; color: var(--ink-soft); font-size: 14px; line-height: 1.65; }
+.success-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .secondary-button { background: #fff; border-color: #d1dde4; }
 .page-footer { display: flex; justify-content: space-between; gap: 12px; padding-top: 16px; color: #607487; font-family: var(--mono); font-size: 9px; letter-spacing: .02em; }
 

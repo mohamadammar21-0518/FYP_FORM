@@ -15,7 +15,8 @@ export const appRouter = router({
     submit: publicProcedure
       .input(z.object({
         fullName: z.string().trim().min(1, "Enter your full name.").max(150),
-        studentId: z.string().trim().min(1, "Enter your student ID.").max(80),
+        studentId: z.string().trim().min(1, "Enter your student ID.").max(80)
+          .regex(/^[Aa][Ii][Uu].{8}$/, "Student ID must be 11 characters starting with AIU (e.g. AIU26102205)"),
         intakeYear: z.enum(["2026/2027 October", "2026/27 March"]),
         attendance: z.array(attendanceField).length(courseNames.length),
         gpa: gpaField,

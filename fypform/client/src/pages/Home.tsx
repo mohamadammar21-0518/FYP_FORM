@@ -172,11 +172,13 @@ export default function Home() {
             <p className="eyebrow"><span className="eyebrow-mark" aria-hidden="true" /> RESPONSE RECORDED</p>
             <h2>Thank you for helping.</h2>
             <p className="success-copy">
-              Your response has been saved for our FYP. You can close this page or submit another response.
+              Your attendance details have been saved for our FYP research. You can close this page or submit another response.
             </p>
-            <button className="secondary-button" type="button" onClick={startAnother}>
-              <RotateCcw size={16} aria-hidden="true" /> Submit another response
-            </button>
+            <div className="success-actions">
+              <button className="secondary-button" type="button" onClick={startAnother}>
+                <RotateCcw size={16} aria-hidden="true" /> Submit another response
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -233,7 +235,13 @@ export default function Home() {
               })}
             </div>
 
-            <form ref={formRef} onSubmit={handleSubmit} noValidate>
+            <form ref={formRef} onSubmit={handleSubmit} noValidate onKeyDown={(e) => {
+              // Prevent Enter from submitting the form on steps 1 and 2
+              if (e.key === "Enter" && step !== 3) {
+                e.preventDefault();
+                handleContinue();
+              }
+            }}>
               {step === 1 && (
                 <section className="form-section" aria-label="Step 1 of 3: Your details">
                   <div className="section-heading">
@@ -267,12 +275,19 @@ export default function Home() {
                         name="studentId"
                         type="text"
                         autoComplete="off"
-                        placeholder="e.g. 20261234"
+                        placeholder="AIU26102205"
                         value={values.studentId}
-                        onChange={event => update("studentId", event.target.value)}
-                        maxLength={80}
+                        onChange={event => {
+                          const val = event.target.value.toUpperCase().slice(0, 11);
+                          update("studentId", val);
+                        }}
+                        maxLength={11}
+                        pattern="[Aa][Ii][Uu].{8}"
+                        title="Student ID must be 11 characters starting with AIU (e.g. AIU26102205)"
                         required
+                        style={{ fontFamily: "var(--mono)", letterSpacing: ".02em" }}
                       />
+                      <span className="field-help">11 characters, starts with AIU</span>
                     </div>
 
                     <div className="field">
@@ -332,7 +347,7 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-                  <p className="field-hint">Use the attendance percentage shown in Student Hub, from 0 to 100.</p>
+                  <p className="field-hint">Use the attendance percentage shown in Student Hub, from 0 to 100. All five courses are required.</p>
                 </section>
               )}
 

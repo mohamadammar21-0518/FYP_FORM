@@ -5,7 +5,7 @@ export const intakeYearEnum = pgEnum("intake_year", ["2026/2027 October", "2026/
 export const attendanceSubmissions = pgTable("attendance_submissions", {
   id: serial("id").primaryKey(),
   fullName: varchar("full_name", { length: 150 }).notNull(),
-  studentId: varchar("student_id", { length: 80 }).notNull(),
+  studentId: varchar("student_id", { length: 11 }).notNull(),
   intakeYear: intakeYearEnum("intake_year").notNull(),
   // 5 separate course attendance columns (percentage 0–100)
   course1: numeric("course1", { precision: 5, scale: 2 }).notNull(),
