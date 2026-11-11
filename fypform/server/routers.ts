@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { courseNames } from "../shared/courses";
 import { publicProcedure, router } from "./_core/trpc";
-import { createAttendanceSubmission } from "./db";
+import { createAttendanceSubmission, getAllSubmissions } from "./db";
 import { TRPCError } from "@trpc/server";
 
 // Attendance: 0–100 percentage
@@ -9,6 +9,9 @@ const attendanceField = z.number().finite().min(0).max(100);
 
 // GPA/CGPA: 0–4.00 scale (AIU standard)
 const gpaField = z.number().finite().min(0).max(4).optional();
+
+// Admin password — set ADMIN_PASSWORD env var on Render, fallback for dev
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "fypadmin2026";
 
 export const appRouter = router({
   studentSurvey: router({
@@ -44,6 +47,27 @@ export const appRouter = router({
             message: "Unable to save your response.",
           });
         }
+      }),
+  }),
+
+  admin: router({
+    login: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .mutation(({ input }) => {
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Incorrect password." });
+        }
+        return { success: true } as const;
+      }),
+
+    getSubmissions: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .query(async ({ input }) => {
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Incorrect password." });
+        }
+        const rows = await getAllSubmissions();
+        return rows;
       }),
   }),
 });

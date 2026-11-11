@@ -19,3 +19,11 @@ export async function createAttendanceSubmission(submission: InsertAttendanceSub
   const result = await db.insert(attendanceSubmissions).values(submission);
   return result;
 }
+
+export async function getAllSubmissions() {
+  const db = getDb();
+  return db
+    .select()
+    .from(attendanceSubmissions)
+    .orderBy(attendanceSubmissions.createdAt);
+}
