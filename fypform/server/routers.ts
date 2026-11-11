@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { courseNames } from "../shared/courses";
 import { publicProcedure, router } from "./_core/trpc";
-import { createAttendanceSubmission, getAllSubmissions } from "./db";
+import { createAttendanceSubmission, getAllSubmissions, updateSubmission, deleteSubmission, deleteAllSubmissions } from "./db";
 import { TRPCError } from "@trpc/server";
 
 // Attendance: 0–100 percentage
@@ -68,6 +68,50 @@ export const appRouter = router({
         }
         const rows = await getAllSubmissions();
         return rows;
+      }),
+
+    updateSubmission: publicProcedure
+      .input(z.object({
+        password: z.string(),
+        id: z.number(),
+        fullName: z.string().trim().min(1).max(150),
+        studentId: z.string().trim().min(1).max(11),
+        intakeYear: z.enum(["2026/2027 October", "2026/27 March"]),
+        course1: z.string(),
+        course2: z.string(),
+        course3: z.string(),
+        course4: z.string(),
+        course5: z.string(),
+        gpa: z.string().nullable(),
+        cgpa: z.string().nullable(),
+      }))
+      .mutation(async ({ input }) => {
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Incorrect password." });
+        }
+        const { password: _, id, ...data } = input;
+        await updateSubmission(id, data);
+        return { success: true } as const;
+      }),
+
+    deleteSubmission: publicProcedure
+      .input(z.object({ password: z.string(), id: z.number() }))
+      .mutation(async ({ input }) => {
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Incorrect password." });
+        }
+        await deleteSubmission(input.id);
+        return { success: true } as const;
+      }),
+
+    deleteAll: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .mutation(async ({ input }) => {
+        if (input.password !== ADMIN_PASSWORD) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Incorrect password." });
+        }
+        await deleteAllSubmissions();
+        return { success: true } as const;
       }),
   }),
 });

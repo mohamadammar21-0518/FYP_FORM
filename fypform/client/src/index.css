@@ -459,3 +459,86 @@ body::before {
   .admin-stat-card { min-width: 0; flex: 1; padding: 12px 14px; }
   .admin-stat-value { font-size: 18px; }
 }
+
+/* Admin — edit/delete additions */
+.admin-delete-all-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 38px; padding: 0 14px;
+  background: #fff; color: #a63f48;
+  border: 1.5px solid #f0d4d4; border-radius: 6px;
+  font-size: 12px; font-weight: 550; cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.admin-delete-all-btn:hover:not(:disabled) { background: #fdf4f4; border-color: #e0b0b0; }
+.admin-delete-all-btn:disabled { opacity: .4; cursor: default; }
+
+.admin-confirm-bar {
+  display: flex; align-items: center; gap: 12px;
+  max-width: 1200px; margin: 0 auto 16px;
+  padding: 14px 18px; background: #fff8f4;
+  border: 1.5px solid #f5d0bb; border-radius: 8px;
+  font-size: 13px; color: #7a3a1e; flex-wrap: wrap;
+}
+.admin-confirm-bar strong { font-weight: 650; }
+.admin-confirm-yes {
+  height: 34px; padding: 0 14px; background: #a63f48;
+  color: #fff; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 550; cursor: pointer;
+  transition: background 150ms ease;
+}
+.admin-confirm-yes:hover:not(:disabled) { background: #8c2f37; }
+.admin-confirm-yes:disabled { opacity: .6; cursor: wait; }
+.admin-confirm-no {
+  height: 34px; padding: 0 12px; background: transparent;
+  color: #607487; border: 1.5px solid #d0dbe3; border-radius: 6px;
+  font-size: 12px; cursor: pointer;
+  transition: background 150ms ease;
+}
+.admin-confirm-no:hover { background: #f0f4f7; }
+
+/* Inline editing */
+.admin-row-editing td { background: #f5f9ff !important; }
+.admin-inline-input {
+  width: 100%; min-width: 90px; height: 32px;
+  padding: 0 8px; font-size: 12px;
+  border: 1.5px solid #a0bcd4; border-radius: 5px;
+  background: #fff; color: #1a3550;
+  transition: border-color 150ms ease;
+}
+.admin-inline-input:focus { outline: none; border-color: var(--aiu-teal); box-shadow: 0 0 0 2px rgb(0 178 172 / 12%); }
+.admin-inline-mono { font-family: var(--mono); font-size: 11px; }
+.admin-inline-pct { min-width: 60px; max-width: 72px; text-align: right; }
+.admin-inline-select {
+  height: 32px; padding: 0 6px; font-size: 11px;
+  border: 1.5px solid #a0bcd4; border-radius: 5px;
+  background: #fff; color: #1a3550; cursor: pointer;
+}
+.admin-inline-select:focus { outline: none; border-color: var(--aiu-teal); }
+
+/* Action buttons */
+.admin-td-actions { white-space: nowrap; }
+.admin-table th:last-child,
+.admin-table td:last-child { text-align: center; }
+.admin-action-edit, .admin-action-delete, .admin-action-save,
+.admin-action-cancel, .admin-action-confirm-del {
+  display: inline-grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 5px;
+  border: 1.5px solid transparent; cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  background: transparent;
+}
+.admin-action-edit { color: #3a6ea8; }
+.admin-action-edit:hover { background: #eef4fb; border-color: #c0d8ef; }
+.admin-action-delete { color: #a63f48; }
+.admin-action-delete:hover { background: #fdf4f4; border-color: #f0d0d0; }
+.admin-action-save { color: #2a7a4a; }
+.admin-action-save:hover { background: #edf7ee; border-color: #b8dfc4; }
+.admin-action-save:disabled { opacity: .5; cursor: wait; }
+.admin-action-cancel { color: #607487; }
+.admin-action-cancel:hover { background: #f0f4f7; border-color: #d0dbe3; }
+.admin-action-confirm-del {
+  width: auto; padding: 0 10px; color: #fff;
+  background: #a63f48; border-color: #a63f48; font-size: 11px; font-weight: 600;
+}
+.admin-action-confirm-del:hover:not(:disabled) { background: #8c2f37; }
+.admin-action-confirm-del:disabled { opacity: .6; cursor: wait; }

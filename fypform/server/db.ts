@@ -1,4 +1,5 @@
 import { drizzle } from "drizzle-orm/node-postgres";
+import { eq } from "drizzle-orm";
 import { Pool } from "pg";
 import { InsertAttendanceSubmission, attendanceSubmissions } from "../drizzle/schema";
 
@@ -26,4 +27,19 @@ export async function getAllSubmissions() {
     .select()
     .from(attendanceSubmissions)
     .orderBy(attendanceSubmissions.createdAt);
+}
+
+export async function updateSubmission(id: number, data: Partial<InsertAttendanceSubmission>) {
+  const db = getDb();
+  return db.update(attendanceSubmissions).set(data).where(eq(attendanceSubmissions.id, id));
+}
+
+export async function deleteSubmission(id: number) {
+  const db = getDb();
+  return db.delete(attendanceSubmissions).where(eq(attendanceSubmissions.id, id));
+}
+
+export async function deleteAllSubmissions() {
+  const db = getDb();
+  return db.delete(attendanceSubmissions);
 }
