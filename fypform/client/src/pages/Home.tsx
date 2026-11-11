@@ -104,6 +104,12 @@ export default function Home() {
     event.preventDefault();
     setFormError("");
 
+    // Only allow submission from step 3
+    if (step !== 3) {
+      handleContinue();
+      return;
+    }
+
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
 
