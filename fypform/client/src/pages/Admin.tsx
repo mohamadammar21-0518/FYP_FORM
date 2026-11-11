@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import type { CourseAttendanceEntry } from "@shared/courses";
-import {
-  Lock, LogOut, Download, Users, BookOpen, TrendingUp,
-  AlertCircle, Trash2, Trash, X, Search, ChevronDown, ChevronUp,
-} from "lucide-react";
+import { Lock, LogOut, Download, Users, BookOpen, AlertCircle, Trash2, Trash, X, Search, ChevronDown, ChevronUp } from "lucide-react";
 
 const STORAGE_KEY = "fyp_admin_pw";
 
@@ -91,12 +88,6 @@ export default function Admin() {
 
   const semesterOptions = [...new Set(submissions?.map(s => s.semester) ?? [])].sort();
 
-  // Stats
-  const totalCourses = submissions?.reduce((sum, s) => sum + (s.courseAttendance?.length ?? 0), 0) ?? 0;
-  const avgGpa = submissions?.length
-    ? (submissions.reduce((sum, s) => sum + (s.gpa ? parseFloat(s.gpa) : 0), 0) / submissions.length).toFixed(2)
-    : "—";
-
   // ── Login ──
   if (!isLoggedIn) {
     return (
@@ -154,20 +145,6 @@ export default function Admin() {
             <span className="admin-stat-label">Total students</span>
           </div>
         </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon"><BookOpen size={18} /></div>
-          <div>
-            <span className="admin-stat-value">{totalCourses}</span>
-            <span className="admin-stat-label">Total course entries</span>
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon"><TrendingUp size={18} /></div>
-          <div>
-            <span className="admin-stat-value">{avgGpa}</span>
-            <span className="admin-stat-label">Average GPA</span>
-          </div>
-        </div>
       </div>
 
       {/* Delete all confirm */}
@@ -221,9 +198,6 @@ export default function Admin() {
         {filtered.map((s, i) => {
           const courses = s.courseAttendance ?? [];
           const isExpanded = expandedId === s.id;
-          const avgAttendance = courses.length
-            ? (courses.reduce((sum, c) => sum + c.attendancePercentage, 0) / courses.length).toFixed(1)
-            : null;
 
           return (
             <div key={s.id} className="admin-card">
@@ -269,11 +243,6 @@ export default function Admin() {
                 </div>
                 <div className="admin-card-gpa-divider" />
                 <div className="admin-card-gpa-item">
-                  <span className="admin-card-gpa-label">Avg Attendance</span>
-                  <span className="admin-card-gpa-value">{avgAttendance ? `${avgAttendance}%` : "—"}</span>
-                </div>
-                <div className="admin-card-gpa-divider" />
-                <div className="admin-card-gpa-item">
                   <span className="admin-card-gpa-label">Submitted</span>
                   <span className="admin-card-gpa-value">{new Date(s.createdAt).toLocaleDateString()}</span>
                 </div>
@@ -299,24 +268,17 @@ export default function Admin() {
                         <th>Course Code</th>
                         <th>Course Name</th>
                         <th>Attendance</th>
-                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {courses.map((c, ci) => {
-                        const pct = c.attendancePercentage;
-                        const status = pct >= 80 ? "good" : pct >= 60 ? "warning" : "low";
-                        const statusLabel = pct >= 80 ? "Good" : pct >= 60 ? "At risk" : "Low";
-                        return (
-                          <tr key={ci}>
-                            <td className="admin-td-num">{ci + 1}</td>
-                            <td className="admin-td-mono">{c.courseCode}</td>
-                            <td>{c.courseName}</td>
-                            <td className="admin-td-pct"><strong>{pct}%</strong></td>
-                            <td><span className={`admin-att-badge admin-att-${status}`}>{statusLabel}</span></td>
-                          </tr>
-                        );
-                      })}
+                      {courses.map((c, ci) => (
+                        <tr key={ci}>
+                          <td className="admin-td-num">{ci + 1}</td>
+                          <td className="admin-td-mono">{c.courseCode}</td>
+                          <td>{c.courseName}</td>
+                          <td className="admin-td-pct"><strong>{c.attendancePercentage}%</strong></td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
