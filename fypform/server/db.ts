@@ -17,16 +17,12 @@ export function getDb() {
 
 export async function createAttendanceSubmission(submission: InsertAttendanceSubmission) {
   const db = getDb();
-  const result = await db.insert(attendanceSubmissions).values(submission);
-  return result;
+  return db.insert(attendanceSubmissions).values(submission);
 }
 
 export async function getAllSubmissions() {
   const db = getDb();
-  return db
-    .select()
-    .from(attendanceSubmissions)
-    .orderBy(attendanceSubmissions.createdAt);
+  return db.select().from(attendanceSubmissions).orderBy(attendanceSubmissions.createdAt);
 }
 
 export async function updateSubmission(id: number, data: Partial<InsertAttendanceSubmission>) {

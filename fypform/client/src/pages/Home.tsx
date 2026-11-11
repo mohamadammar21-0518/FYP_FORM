@@ -1,30 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  RotateCcw,
-} from "lucide-react";
-import { courseNames } from "@shared/courses";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, RotateCcw, Plus, Trash2 } from "lucide-react";
+import { courseList, semesterList } from "@shared/courses";
 import { trpc } from "@/lib/trpc";
+
+type CourseRow = {
+  courseCode: string;
+  courseName: string;
+  attendancePercentage: string;
+};
 
 type FormValues = {
   fullName: string;
   studentId: string;
   intakeYear: string;
-  attendance: string[];
+  semester: string;
+  courses: CourseRow[];
   gpa: string;
   cgpa: string;
 };
 
 type Step = 1 | 2 | 3;
 
+const emptyCourse = (): CourseRow => ({ courseCode: "", courseName: "", attendancePercentage: "" });
+
 const emptyForm: FormValues = {
   fullName: "",
   studentId: "",
   intakeYear: "",
-  attendance: ["", "", "", "", ""],
+  semester: "",
+  courses: [emptyCourse()],
   gpa: "",
   cgpa: "",
 };
@@ -44,113 +48,145 @@ export default function Home() {
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const hasVisitedStep = useRef(false);
 
+  const isFirstSemester = values.semester === "Semester 1";
+
   const completedRequired = useMemo(() => {
-    const identityCount = Number(values.fullName.trim().length > 0)
-      + Number(values.studentId.trim().length > 0)
-      + Number(values.intakeYear.length > 0);
-    const attendanceCount = values.attendance.filter(value => value.trim() !== "").length;
-    return identityCount + attendanceCount;
+    const detailCount =
+      Number(values.fullName.trim().length > 0) +
+      Number(values.studentId.trim().length > 0) +
+      Number(values.intakeYear.length > 0) +
+      Number(values.semester.length > 0);
+    const courseCount = values.courses.filter(
+      c => c.courseCode && c.attendancePercentage.trim() !== ""
+    ).length;
+    const gpaCount = Number(values.gpa.trim() !== "") + Number(values.cgpa.trim() !== "");
+    return detailCount + courseCount + gpaCount;
   }, [values]);
 
-  useEffect(() => {
-    if (!hasVisitedStep.current) {
-      hasVisitedStep.current = true;
-      return;
-    }
+  const totalRequired = 4 + values.courses.length + 2;
 
+  useEffect(() => {
+    if (!hasVisitedStep.current) { hasVisitedStep.current = true; return; }
     stepHeadingRef.current?.focus();
-    const reduceMotion = window.matchMedia
-      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      : false;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
   }, [step]);
+
+  // Auto-fill GPA/CGPA when semester 1 is selected
+  useEffect(() => {
+    if (isFirstSemester) {
+      setValues(v => ({ ...v, gpa: "4", cgpa: "4" }));
+    }
+  }, [isFirstSemester]);
 
   const submit = trpc.studentSurvey.submit.useMutation({
     onSuccess: () => {
       setFormError("");
       setSubmitted(true);
-      setValues({ ...emptyForm, attendance: [...emptyForm.attendance] });
     },
     onError: () => {
-      setFormError("We couldn’t save your response just now. Please check your connection and try again.");
+      setFormError("We couldn't save your response. Please check your connection and try again.");
     },
   });
 
   const update = <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
-    setValues(current => ({ ...current, [key]: value }));
+    setValues(v => ({ ...v, [key]: value }));
     if (formError) setFormError("");
   };
 
-  const updateAttendance = (index: number, value: string) => {
-    setValues(current => ({
-      ...current,
-      attendance: current.attendance.map((item, itemIndex) => itemIndex === index ? value : item),
-    }));
+  const updateCourse = (index: number, field: keyof CourseRow, value: string) => {
+    setValues(v => {
+      const courses = v.courses.map((c, i) => {
+        if (i !== index) return c;
+        if (field === "courseCode") {
+          const found = courseList.find(cl => cl.code === value);
+          return { ...c, courseCode: value, courseName: found?.name ?? "" };
+        }
+        return { ...c, [field]: value };
+      });
+      return { ...v, courses };
+    });
     if (formError) setFormError("");
+  };
+
+  const addCourse = () => {
+    if (values.courses.length >= 8) return;
+    setValues(v => ({ ...v, courses: [...v.courses, emptyCourse()] }));
+  };
+
+  const removeCourse = (index: number) => {
+    if (values.courses.length <= 1) return;
+    setValues(v => ({ ...v, courses: v.courses.filter((_, i) => i !== index) }));
   };
 
   const handleContinue = () => {
     if (!formRef.current?.reportValidity()) return;
+    // Extra validation for step 2
+    if (step === 2) {
+      const invalid = values.courses.some(c => !c.courseCode || c.attendancePercentage.trim() === "");
+      if (invalid) { setFormError("Please select a course and enter attendance for all rows."); return; }
+      const codes = values.courses.map(c => c.courseCode);
+      if (new Set(codes).size !== codes.length) { setFormError("You have selected the same course more than once."); return; }
+    }
     setFormError("");
-    setStep(current => current === 1 ? 2 : 3);
+    setStep(s => s === 1 ? 2 : 3);
   };
 
   const handleBack = () => {
     setFormError("");
-    setStep(current => current === 3 ? 2 : 1);
+    setStep(s => s === 3 ? 2 : 1);
   };
 
   const handleSubmit = () => {
     setFormError("");
-
     if (step !== 3) return;
-
-    if (!formRef.current?.reportValidity()) return;
-
-    const optionalNumber = (raw: string) => raw.trim() === "" ? undefined : Number(raw);
     submit.mutate({
       fullName: values.fullName.trim(),
       studentId: values.studentId.trim(),
       intakeYear: values.intakeYear as "2026/2027 October" | "2026/27 March",
-      attendance: values.attendance.map(Number),
-      gpa: optionalNumber(values.gpa),
-      cgpa: optionalNumber(values.cgpa),
+      semester: values.semester as typeof semesterList[number],
+      courseAttendance: values.courses.map(c => ({
+        courseCode: c.courseCode,
+        courseName: c.courseName,
+        attendancePercentage: Number(c.attendancePercentage),
+      })),
+      gpa: Number(values.gpa),
+      cgpa: Number(values.cgpa),
     });
   };
 
   const startAnother = () => {
     setSubmitted(false);
     setFormError("");
-    setValues({ ...emptyForm, attendance: [...emptyForm.attendance] });
+    setValues(emptyForm);
     setStep(1);
     submit.reset();
   };
 
+  // Used courses to prevent duplicate selection
+  const usedCodes = values.courses.map(c => c.courseCode).filter(Boolean);
+
   return (
     <main className="page-shell">
       <header className="topbar">
-        <a className="brand" href="/" aria-label="FYP student attendance form home">
-          <img
-            className="brand-logo"
-            src="/aiu-official-logo-trim.png"
-            alt="Albukhary International University"
-          />
+        <a className="brand" href="/" aria-label="Student data collection home">
+          <img className="brand-logo" src="/aiu-official-logo-trim.png" alt="Albukhary International University" />
           <span className="brand-divider" aria-hidden="true" />
           <span className="brand-copy">
-            <strong>FYP attendance form</strong>
-            <span>STUDENT DATA COLLECTION</span>
+            <strong>Student Data Collection</strong>
+            <span>AIU · ACADEMIC RESEARCH</span>
           </span>
         </a>
-        <span className="project-badge"><span aria-hidden="true" /> Student FYP project</span>
+        <span className="project-badge"><span aria-hidden="true" /> Research Survey</span>
       </header>
 
       <section className="intro" aria-labelledby="page-title">
         <div className="intro-copy">
-          <p className="eyebrow"><span className="eyebrow-mark" aria-hidden="true" /> FOR AIU STUDENTS · FYP RESEARCH</p>
-          <h1 id="page-title">Share your attendance details.</h1>
+          <p className="eyebrow"><span className="eyebrow-mark" aria-hidden="true" /> FOR AIU STUDENTS · ACADEMIC RESEARCH</p>
+          <h1 id="page-title">Share your academic data.</h1>
           <p className="intro-text">
-            Enter the five attendance percentages shown in Student Hub for your assigned courses.
-            GPA and CGPA are optional.
+            Select your enrolled courses, enter attendance percentages from Student Hub,
+            and provide your GPA and CGPA. Your data supports academic research.
           </p>
         </div>
         <div className="intro-aside" aria-hidden="true">
@@ -159,14 +195,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="form-panel" aria-label="Student attendance response">
+      <section className="form-panel" aria-label="Student data collection">
         {submitted ? (
           <div className="success-view" role="status" aria-live="polite">
             <div className="success-icon"><CheckCircle2 size={30} strokeWidth={1.9} /></div>
             <p className="eyebrow"><span className="eyebrow-mark" aria-hidden="true" /> RESPONSE RECORDED</p>
-            <h2>Thank you for helping.</h2>
+            <h2>Thank you for your contribution.</h2>
             <p className="success-copy">
-              Your attendance details have been saved for our FYP research. You can close this page or submit another response.
+              Your academic data has been saved successfully. You may close this page or submit another response.
             </p>
             <div className="success-actions">
               <button className="secondary-button" type="button" onClick={startAnother}>
@@ -183,17 +219,10 @@ export default function Home() {
               </div>
               <div className="required-progress">
                 <span className="progress-label" aria-live="polite">
-                  {completedRequired} of 8 required fields complete
+                  {completedRequired} of {totalRequired} fields complete
                 </span>
-                <div
-                  className="progress-track"
-                  role="progressbar"
-                  aria-label="Required fields completed"
-                  aria-valuemin={0}
-                  aria-valuemax={8}
-                  aria-valuenow={completedRequired}
-                >
-                  <span style={{ width: `${(completedRequired / 8) * 100}%` }} />
+                <div className="progress-track" role="progressbar" aria-valuemin={0} aria-valuemax={totalRequired} aria-valuenow={completedRequired}>
+                  <span style={{ width: `${Math.min((completedRequired / totalRequired) * 100, 100)}%` }} />
                 </div>
               </div>
             </div>
@@ -202,41 +231,37 @@ export default function Home() {
               <div className="stepper-track" aria-hidden="true">
                 <span style={{ width: `${((step - 1) / 2) * 100}%` }} />
               </div>
-              {([1, 2, 3] as const).map(stepNumber => {
-                const isComplete = stepNumber < step;
-                const isCurrent = stepNumber === step;
+              {([1, 2, 3] as const).map(n => {
+                const isComplete = n < step;
+                const isCurrent = n === step;
                 return (
                   <button
-                    className={`step-item${isComplete ? " is-complete" : ""}${isCurrent ? " is-current" : ""}`}
+                    key={n}
                     type="button"
-                    key={stepNumber}
-                    disabled={stepNumber > step}
+                    className={`step-item${isComplete ? " is-complete" : ""}${isCurrent ? " is-current" : ""}`}
+                    disabled={n > step}
                     aria-current={isCurrent ? "step" : undefined}
-                    aria-label={`Step ${stepNumber}: ${stepLabels[stepNumber]}`}
-                    onClick={() => {
-                      if (stepNumber < step) {
-                        setFormError("");
-                        setStep(stepNumber);
-                      }
-                    }}
+                    onClick={() => { if (n < step) { setFormError(""); setStep(n); } }}
                   >
                     <span className="step-marker" aria-hidden="true">
-                      {isComplete ? <Check size={15} strokeWidth={2.5} /> : `0${stepNumber}`}
+                      {isComplete ? <Check size={15} strokeWidth={2.5} /> : `0${n}`}
                     </span>
-                    <span className="step-label">{stepLabels[stepNumber]}</span>
+                    <span className="step-label">{stepLabels[n]}</span>
                   </button>
                 );
               })}
             </div>
 
-            <form ref={formRef} noValidate onSubmit={(e) => e.preventDefault()}>
+            <form ref={formRef} noValidate onSubmit={e => e.preventDefault()}>
+
+              {/* ── Step 1: Your details ── */}
               {step === 1 && (
-                <section className="form-section" aria-label="Step 1 of 3: Your details">
+                <section className="form-section" aria-label="Step 1: Your details">
                   <div className="section-heading">
                     <span className="section-number">01</span>
                     <div>
                       <h3>About you</h3>
-                      <p>A few details to label your response.</p>
+                      <p>Your personal and academic details.</p>
                     </div>
                   </div>
 
@@ -244,34 +269,24 @@ export default function Home() {
                     <div className="field field-wide">
                       <label htmlFor="full-name">Full name <span className="required-mark">*</span></label>
                       <input
-                        id="full-name"
-                        name="fullName"
-                        type="text"
-                        autoComplete="name"
+                        id="full-name" name="fullName" type="text" autoComplete="name"
                         placeholder="Enter your full name"
                         value={values.fullName}
-                        onChange={event => update("fullName", event.target.value)}
-                        maxLength={150}
-                        required
+                        onChange={e => update("fullName", e.target.value)}
+                        maxLength={150} required
                       />
                     </div>
 
                     <div className="field">
                       <label htmlFor="student-id">Student ID <span className="required-mark">*</span></label>
                       <input
-                        id="student-id"
-                        name="studentId"
-                        type="text"
-                        autoComplete="off"
+                        id="student-id" name="studentId" type="text" autoComplete="off"
                         placeholder="AIU26102205"
                         value={values.studentId}
-                        onChange={event => {
-                          const val = event.target.value.toUpperCase().slice(0, 11);
-                          update("studentId", val);
-                        }}
+                        onChange={e => update("studentId", e.target.value.toUpperCase().slice(0, 11))}
                         maxLength={11}
                         pattern="[Aa][Ii][Uu].{8}"
-                        title="Student ID must be 11 characters starting with AIU (e.g. AIU26102205)"
+                        title="Must be 11 characters starting with AIU"
                         required
                         style={{ fontFamily: "var(--mono)", letterSpacing: ".02em" }}
                       />
@@ -280,109 +295,146 @@ export default function Home() {
 
                     <div className="field">
                       <label htmlFor="intake-year">Intake year <span className="required-mark">*</span></label>
-                      <select
-                        id="intake-year"
-                        name="intakeYear"
-                        value={values.intakeYear}
-                        onChange={event => update("intakeYear", event.target.value)}
-                        required
-                      >
-                        <option value="" disabled>Select your intake</option>
+                      <select id="intake-year" name="intakeYear" value={values.intakeYear} onChange={e => update("intakeYear", e.target.value)} required>
+                        <option value="" disabled>Select intake</option>
                         <option value="2026/2027 October">2026/2027 October</option>
                         <option value="2026/27 March">2026/27 March</option>
+                      </select>
+                    </div>
+
+                    <div className="field">
+                      <label htmlFor="semester">Current semester <span className="required-mark">*</span></label>
+                      <select id="semester" name="semester" value={values.semester} onChange={e => update("semester", e.target.value)} required>
+                        <option value="" disabled>Select semester</option>
+                        {semesterList.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
                 </section>
               )}
 
+              {/* ── Step 2: Course attendance ── */}
               {step === 2 && (
-                <section className="form-section courses-section" aria-label="Step 2 of 3: Course attendance">
+                <section className="form-section" aria-label="Step 2: Course attendance">
                   <div className="section-heading">
                     <span className="section-number">02</span>
                     <div>
                       <h3>Course attendance</h3>
-                      <p>Check Student Hub, then enter each percentage.</p>
+                      <p>Select each course and enter its attendance from Student Hub.</p>
                     </div>
                   </div>
 
-                  <div className="course-list">
-                    {courseNames.map((courseName, index) => (
-                      <div className="course-row" key={courseName}>
-                        <div className="course-name">
-                          <span className="course-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                          <label htmlFor={`attendance-${index}`}>
-                            {courseName}<span className="required-mark">*</span>
-                          </label>
+                  <div className="course-builder">
+                    {values.courses.map((course, index) => (
+                      <div key={index} className="course-builder-row">
+                        <div className="course-builder-num">{String(index + 1).padStart(2, "0")}</div>
+
+                        <div className="course-builder-fields">
+                          <div className="field">
+                            <label htmlFor={`course-${index}`}>Course <span className="required-mark">*</span></label>
+                            <select
+                              id={`course-${index}`}
+                              value={course.courseCode}
+                              onChange={e => updateCourse(index, "courseCode", e.target.value)}
+                              required
+                            >
+                              <option value="" disabled>Select a course</option>
+                              {courseList.map(cl => (
+                                <option
+                                  key={cl.code}
+                                  value={cl.code}
+                                  disabled={usedCodes.includes(cl.code) && course.courseCode !== cl.code}
+                                >
+                                  {cl.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="field course-pct-field">
+                            <label htmlFor={`att-${index}`}>Attendance % <span className="required-mark">*</span></label>
+                            <div className="percentage-input">
+                              <input
+                                id={`att-${index}`}
+                                type="number" inputMode="decimal"
+                                min="0" max="100" step="0.01"
+                                placeholder="0.00"
+                                value={course.attendancePercentage}
+                                onChange={e => updateCourse(index, "attendancePercentage", e.target.value)}
+                                required
+                              />
+                              <span aria-hidden="true">%</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="percentage-input">
-                          <input
-                            id={`attendance-${index}`}
-                            name={`attendance-${index + 1}`}
-                            type="number"
-                            inputMode="decimal"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={values.attendance[index]}
-                            onChange={event => updateAttendance(index, event.target.value)}
-                            aria-label={`${courseName} attendance percentage from Student Hub`}
-                            required
-                          />
-                          <span aria-hidden="true">%</span>
-                        </div>
+
+                        {values.courses.length > 1 && (
+                          <button type="button" className="course-remove-btn" onClick={() => removeCourse(index)} aria-label="Remove course">
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
-                  <p className="field-hint">Use the attendance percentage shown in Student Hub, from 0 to 100. All five courses are required.</p>
+
+                  {values.courses.length < 8 && (
+                    <button type="button" className="course-add-btn" onClick={addCourse}>
+                      <Plus size={15} /> Add another course
+                    </button>
+                  )}
+
+                  <p className="field-hint" style={{ marginLeft: 0, marginTop: 14 }}>
+                    You can add up to 8 courses. Enter the percentage shown in Student Hub (0–100).
+                  </p>
                 </section>
               )}
 
+              {/* ── Step 3: GPA/CGPA + Review ── */}
               {step === 3 && (
-                <section className="form-section results-section" aria-label="Step 3 of 3: Optional results and review">
+                <section className="form-section" aria-label="Step 3: Academic results and review">
                   <div className="section-heading">
                     <span className="section-number">03</span>
                     <div>
-                      <h3>Academic results <span className="optional-tag">OPTIONAL</span></h3>
-                      <p>Share these only if you’re comfortable.</p>
+                      <h3>Academic results</h3>
+                      <p>Your GPA and CGPA from Student Hub.</p>
                     </div>
                   </div>
 
-                  <div className="field-grid result-grid">
+                  {isFirstSemester && (
+                    <div className="semester1-notice">
+                      <Check size={14} /> You selected <strong>Semester 1</strong> — GPA and CGPA have been set to <strong>4.00</strong>. Change them if needed.
+                    </div>
+                  )}
+
+                  <div className="field-grid result-grid" style={{ marginLeft: 0 }}>
                     <div className="field">
-                      <label htmlFor="gpa">GPA <span className="optional-label">Optional</span></label>
+                      <label htmlFor="gpa">GPA <span className="required-mark">*</span></label>
                       <input
-                        id="gpa"
-                        name="gpa"
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        max="4"
-                        step="0.01"
-                        placeholder="e.g. 3.75"
+                        id="gpa" name="gpa" type="number" inputMode="decimal"
+                        min="0" max="4" step="0.01" placeholder="e.g. 3.75"
                         value={values.gpa}
-                        onChange={event => update("gpa", event.target.value)}
+                        onChange={e => update("gpa", e.target.value)}
+                        required
                       />
                     </div>
                     <div className="field">
-                      <label htmlFor="cgpa">CGPA <span className="optional-label">Optional</span></label>
+                      <label htmlFor="cgpa">CGPA <span className="required-mark">*</span></label>
                       <input
-                        id="cgpa"
-                        name="cgpa"
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        max="4"
-                        step="0.01"
-                        placeholder="e.g. 3.60"
+                        id="cgpa" name="cgpa" type="number" inputMode="decimal"
+                        min="0" max="4" step="0.01" placeholder="e.g. 3.60"
                         value={values.cgpa}
-                        onChange={event => update("cgpa", event.target.value)}
+                        onChange={e => update("cgpa", e.target.value)}
+                        required
                       />
                     </div>
-                    <p className="field-hint results-hint">Enter your GPA/CGPA from Student Hub (0.00 to 4.00 scale), or leave blank.</p>
+                    <p className="field-hint results-hint">
+                      Enter your GPA and CGPA (0.00 – 4.00 scale). If this is your 1st semester, enter 4.00 for both.
+                    </p>
                   </div>
 
+                  {/* Review card */}
                   <div className="review-card" aria-labelledby="review-heading">
                     <div className="review-heading-row">
                       <div>
@@ -395,13 +447,15 @@ export default function Home() {
                       <div><dt>Full name</dt><dd>{values.fullName.trim()}</dd></div>
                       <div><dt>Student ID</dt><dd>{values.studentId.trim()}</dd></div>
                       <div><dt>Intake</dt><dd>{values.intakeYear}</dd></div>
-                      <div><dt>GPA / CGPA</dt><dd>{values.gpa || values.cgpa ? [values.gpa && `GPA ${values.gpa}`, values.cgpa && `CGPA ${values.cgpa}`].filter(Boolean).join(" · ") : "Not provided"}</dd></div>
+                      <div><dt>Semester</dt><dd>{values.semester}</dd></div>
+                      <div><dt>GPA</dt><dd>{values.gpa || "—"}</dd></div>
+                      <div><dt>CGPA</dt><dd>{values.cgpa || "—"}</dd></div>
                     </dl>
                     <ul className="review-courses" aria-label="Course attendance summary">
-                      {courseNames.map((courseName, index) => (
-                        <li key={courseName}>
-                          <span>{courseName}</span>
-                          <strong>{values.attendance[index] ? `${values.attendance[index]}%` : "Not entered"}</strong>
+                      {values.courses.map((c, i) => (
+                        <li key={i}>
+                          <span>{c.courseName || c.courseCode || `Course ${i + 1}`}</span>
+                          <strong>{c.attendancePercentage ? `${c.attendancePercentage}%` : "—"}</strong>
                         </li>
                       ))}
                     </ul>
@@ -417,7 +471,6 @@ export default function Home() {
                 ) : (
                   <span className="required-note"><span className="required-mark">*</span> Required fields</span>
                 )}
-
                 <div className="form-actions-end">
                   {step < 3 ? (
                     <button className="primary-button" type="button" onClick={handleContinue}>
@@ -426,7 +479,7 @@ export default function Home() {
                     </button>
                   ) : (
                     <button className="primary-button" type="button" disabled={submit.isPending} onClick={handleSubmit}>
-                      <span>{submit.isPending ? "Saving your response…" : "Submit response"}</span>
+                      <span>{submit.isPending ? "Saving…" : "Submit response"}</span>
                       {!submit.isPending && <ArrowRight size={17} aria-hidden="true" />}
                       {submit.isPending && <span className="button-spinner" aria-hidden="true" />}
                     </button>
@@ -441,8 +494,8 @@ export default function Home() {
       </section>
 
       <footer className="page-footer">
-        <span>FYP · STUDENT DATA COLLECTION</span>
-        <span>Student project · Not an official AIU portal</span>
+        <span>AIU · ACADEMIC RESEARCH</span>
+        <span>Student data collection · Not an official AIU portal</span>
       </footer>
     </main>
   );

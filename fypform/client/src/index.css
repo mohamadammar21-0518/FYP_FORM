@@ -542,3 +542,51 @@ body::before {
 }
 .admin-action-confirm-del:hover:not(:disabled) { background: #8c2f37; }
 .admin-action-confirm-del:disabled { opacity: .6; cursor: wait; }
+
+/* ── Course builder ── */
+.course-builder { display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; }
+.course-builder-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: flex-end; gap: 10px;
+  padding: 14px 16px; background: #f8fbfc;
+  border: 1.5px solid #e0eaef; border-radius: 8px;
+  transition: border-color 150ms ease;
+}
+.course-builder-row:focus-within { border-color: var(--aiu-teal); }
+.course-builder-num { color: var(--aiu-teal-ink); font-family: var(--mono); font-size: 10px; font-weight: 600; padding-bottom: 14px; }
+.course-builder-fields { display: grid; grid-template-columns: 1fr 140px; gap: 10px; min-width: 0; }
+.course-pct-field { min-width: 0; }
+.course-remove-btn {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  color: #a63f48; background: transparent;
+  border: 1.5px solid #f0d4d4; border-radius: 6px;
+  cursor: pointer; flex-shrink: 0; margin-bottom: 1px;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.course-remove-btn:hover { background: #fdf4f4; border-color: #e0b0b0; }
+.course-add-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 42px; padding: 0 16px; margin-top: 4px;
+  color: var(--aiu-teal-ink); background: #f0faf9;
+  border: 1.5px dashed #9dd4cf; border-radius: 7px;
+  font-size: 13px; font-weight: 550; cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.course-add-btn:hover { background: #e5f7f5; border-color: var(--aiu-teal); }
+
+/* Semester 1 notice */
+.semester1-notice {
+  display: flex; align-items: center; gap: 9px;
+  margin-bottom: 18px; padding: 12px 16px;
+  background: #edf7f6; border: 1.5px solid #b8e0dc;
+  border-radius: 7px; color: #1f6b63; font-size: 12px; line-height: 1.5;
+}
+.semester1-notice strong { font-weight: 650; }
+
+@media (max-width: 480px) {
+  .course-builder-row { grid-template-columns: 24px 1fr auto; padding: 12px 12px; }
+  .course-builder-fields { grid-template-columns: 1fr; gap: 8px; }
+  .course-pct-field { max-width: 100%; }
+  .course-remove-btn { margin-bottom: 0; align-self: flex-end; }
+}
